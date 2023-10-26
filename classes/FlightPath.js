@@ -1,6 +1,8 @@
-export class FlightPath {
+class FlightPath {
     path;
     totalCost;
+
+    constructor () {}
 
     constructor(path, cost) {
         this.path = path;
@@ -14,4 +16,16 @@ export class FlightPath {
     get cost() {
         return this.cost;
     }
+
+    set path(path) {
+        this.path = path;
+    }
+
+    set cost(cost) {
+        this.cost = cost;
+    }
+}
+
+module.exports = {
+    FlightPath
 }
