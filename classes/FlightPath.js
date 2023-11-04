@@ -1,8 +1,6 @@
-class FlightPath {
+module.exports = class FlightPath {
     path;
     totalCost;
-
-    constructor () {}
 
     constructor(path, cost) {
         this.path = path;
@@ -24,8 +22,4 @@ class FlightPath {
     set cost(cost) {
         this.cost = cost;
     }
-}
-
-module.exports = {
-    FlightPath
 }

@@ -1,86 +1,18 @@
-class FlightPath {
-    path;
-    totalCost;
-
-    constructor(path, cost) {
-        this.path = path;
-        this.cost = cost;
-    }
-
-    get path() {
-        return this.path;
-    }
-
-    get cost() {
-        return this.cost;
-    }
-
-    set path(path) {
-        this.path = path;
-    }
-
-    set cost(cost) {
-        this.cost = cost;
-    }
-}
-
-class Node {
-    constructor(data) {
-        this.data = data;
-        this.next = null;
-    }
-}
-
-class Queue {
-    constructor() {
-        this.head = null;
-        this.tail = null;
-        this.size = 0;
-    }
-
-    push(data) {
-        const newNode = new Node(data);
-
-        if (!this.head) {
-            this.head = newNode;
-            this.tail = newNode;
-          } else {
-            this.tail.next = newNode;
-            this.tail = newNode;
-          }
-      
-          this.size++;
-    }
-
-    pop() {
-        if (!this.head) {
-            return null;
-        }
-      
-        const removeNode = this.head;
-        this.head = this.head.next;
-        if (!this.head) {
-            this.tail = null;
-        }
-      
-        this.size--;
-      
-        return removeNode.data;
-    }
-
-    isEmpty() {
-        return this.size === 0;
-    }
-}
-
 const express = require('express');
 const app = express();
 const port = 3000;
 
-const jsonData = require('./crawled_data.json');
+const jsonData = require('./data/crawled_data.json');
+const process = require('./downloader.js');
+
+const Queue = require('./classes/Queue.js');
+const FlightPath = require('./classes/FlightPath.js');
+const Task = require('./classes/Task.js');
 
 let flightCost = new Map();
 let graph = new Map();
+
+init();
 
 app.use(express.json());
 
@@ -95,25 +27,15 @@ app.use(express.json());
         ‘departureDate’ : ‘2023-10-17’
     }
 */
-app.get('/spiderbot/list', (req, res) => {
-    init();
-
-    let finded = findFastestRoute("ICN", "JFK");
-    
-    for (let id in finded) {
-        let temp = finded[id];
-
-        console.log("path : " + temp[0] + " cost : " + temp[1]);
-    }
-
+app.get('/spiderbot/list', async (req, res) => {
     /*
     let requestBody = req.body;
-    let flag = requestBody.flag;
+    let flag = requestBody['flag'];
 
     if (flag == 0) {    // 항공편 리스트
-        let departure = requestBody.departure;
-        let destination = requestBody.destination;
-        let departureDate = requestBody.departureDate;
+        let departure = requestBody['departure'];
+        let destination = requestBody['destination'];
+        let departureDate = requestBody['departureDate'];
 
         let flightPaths = bfs_search(departure, destination);
     
@@ -121,27 +43,49 @@ app.get('/spiderbot/list', (req, res) => {
 
         let task = makeTask(flightPath);
 
+        // return : TicketList
         let result = process(task);
+
+        res.send(result);
     }
     else if (flag == 1) {   // 취소표 확인 요청
         
     }
     */
 
-    res.send(finded);
+    const start = new Date();
+
+    // for test
+    let departure = "ICN";
+    let destination = "JFK";
+    let departureDate = "20231202";
+    let finded = findFastestRoute(departure, destination);
+    
+    // for test
+    for (let id in finded) {
+        let temp = finded[id];
+
+        console.log("path : " + temp[0] + " cost : " + temp[1]);
+    }
+
+    let task = makeTask(departure, destination, departureDate, finded);
+    let result = await process(task);
+
+    const end = new Date();
+    console.log(end - start);
+
+    res.send(JSON.stringify(result));
 });
 
 app.listen(port);
 
 /*
-    출발지와 목적지까지의 최소 경유 루트와 경로를 찾음
-
-    Parameters
+    input
         departure : string
         destination : string
 
-    Return
-        paths 리턴 [[path1], [path2], [path3]]
+    output
+        paths : ex ) [[path1], [path2], [path3]]
 */
 function bfs_search(departure, destination) {
     let visited = [];
@@ -194,13 +138,10 @@ function bfs_search(departure, destination) {
 }
 
 /*
-    전체 flightPath 중 가장 빠른 루트인 최대 3개의
-    경유지 리스트 뽑음
-
-    Parameters
+    input
         departure, destination
     
-    Return
+    output
         pathTimes [[path1, cost1], [path2, cost2], ...]
 */
 function findFastestRoute(departure, destination) {
@@ -229,21 +170,16 @@ function findFastestRoute(departure, destination) {
 }
 
 /*
-    flightPath를 task 객체로 변환하는 함수
-
-    Parameters
-        flightPath : FlightPath 객체의 배열
+    input
+        departure, destination, departureDate, paths
     
-    Return
+    output
         Task 객체
 */
-function makeTask(flightPath) {
-
+function makeTask(departure, destination, departureDate, paths) {
+    return new Task(departure, destination, departureDate, paths);
 }
 
-/* 
-    flightMap 초기화 함수
-*/
 function init() {
     for (let id in jsonData) {
         let entry = jsonData[id];
