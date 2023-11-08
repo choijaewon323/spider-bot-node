@@ -9,29 +9,32 @@ const TicketList = require('./classes/TicketList.js');
 
 /*
     [input]
-    class Task
+    class Task {
         departure;
         destination;
         departureDate;
-        paths
+        paths;
+    }
 */
 /*
     [output]
     class TicketList {
-        Tickets = [ticket1, ticket2, ....]
+        tickets = [ticket1, ticket2, ....]
     }
 
     class Ticket {
-        path = [route1, route2, route3]
+        path = ['ICN', 'LAS', 'JFK']
+        routes = [route1, route2]
     }
 
-    class route {
-        departure
-        destination
-        airline
-        departureDate
-        destinationDate
-        price
+    class Route {
+        airline;
+        departure;
+        destination;
+        departureTime;
+        arrivedTime;
+        timeTaken;
+        price;
     }
 */
 module.exports = async function process(task) {
@@ -41,17 +44,30 @@ module.exports = async function process(task) {
     let paths = task.paths;
     
     let result = [];
-    let promises = [];
 
     for (let present of paths) {
-        present.push(departureDate);
-        let promise = runThread(present);
-        promises.push(promise);
-    }
+        let promises = [];
 
-    result = await Promise.all(promises);
+        let path = present[0];  // Array
+        let cost = present[1];  // Integer
+        let pathLength = path.length;
 
-    for (let resultPerPath of result) {
+        for (let i = 0; i < pathLength - 1; i++) {
+            let start = path[i];
+            let end = path[i + 1];
+
+            let pathPromise = new Promise((resolve, reject) => {
+                crawl([start, end, departureDate]).then((temp) => {
+                    resolve(temp);
+                });
+            })
+
+            promises.push(pathPromise);
+        }
+
+        let resultPerPath = await Promise.all(promises);
+
+        // evaluate : 만약 route들 중 하나라도 비어있으면, 무효화
         let flag = true;
         for (let tempPath of resultPerPath) {
             if (tempPath.length === 0) {
