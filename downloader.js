@@ -41,35 +41,17 @@ module.exports = async function process(task) {
     let paths = task.paths;
     
     let result = [];
+    let promises = [];
 
     for (let present of paths) {
-        /*
+        present.push(departureDate);
         let promise = runThread(present);
         promises.push(promise);
-        */
+    }
 
-        let promises = [];
+    result = await Promise.all(promises);
 
-        let path = present[0];  // Array
-        let cost = present[1];  // Integer
-        let pathLength = path.length;
-
-        for (let i = 0; i < pathLength - 1; i++) {
-            let start = path[i];
-            let end = path[i + 1];
-            
-            let pathPromise = new Promise((resolve, reject) => {
-                crawl([start, end, departureDate]).then((temp) => {
-                    resolve(temp);
-                });
-            })
-            
-            promises.push(pathPromise);
-        }
-
-        let resultPerPath = await Promise.all(promises);
-        
-        // evaluate : 만약 route들 중 하나라도 비어있으면, 무효화
+    for (let resultPerPath of result) {
         let flag = true;
         for (let tempPath of resultPerPath) {
             if (tempPath.length === 0) {
@@ -113,7 +95,7 @@ function makeTicket(resultPerPath, tempArray, index, path, result) {
     }
 }
 
-/*
+
 async function run(flight) {
     const result = await runThread(flight);
     
@@ -122,7 +104,7 @@ async function run(flight) {
 
 function runThread(present) {
     return new Promise((resolve, reject) => {
-        const worker = new Worker("./crawlingThread.js");
+        const worker = new Worker("./executeThread.js");
 
         worker.on('message', (result) => {
             resolve(result);
@@ -143,4 +125,3 @@ function runThread(present) {
 function crawlingInfo(url, departure, destination, date, people) {
 
 }
-*/

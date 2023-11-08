@@ -25,12 +25,12 @@ module.exports = async function crawl(value) {
 
     await page.goto(URL);
 
+    console.log("###### ENTER THE PAGE ######");
+
     await page.waitForSelector('#__next > div > div.container > div.international_content__2Z9HD > div > div.header_InternationalHeader__16F2u > div');
 
     const list = await page.$$('.indivisual_IndivisualItem__3co62');
     let result = [];
-
-    console.log("######## ENTER THE PAGE ########");
 
     for (let element of list) {
         const airlineTag = await element.$(".airline > .name");

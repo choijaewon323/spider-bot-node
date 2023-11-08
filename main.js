@@ -28,53 +28,28 @@ app.use(express.json());
     }
 */
 app.get('/spiderbot/list', async (req, res) => {
-    /*
-    let requestBody = req.body;
-    let flag = requestBody['flag'];
-
-    if (flag == 0) {    // 항공편 리스트
-        let departure = requestBody['departure'];
-        let destination = requestBody['destination'];
-        let departureDate = requestBody['departureDate'];
-
-        let flightPaths = bfs_search(departure, destination);
-    
-        let resultList = findFastestRoute(flightPath);
-
-        let task = makeTask(flightPath);
-
-        // return : TicketList
-        let result = process(task);
-
-        res.send(result);
-    }
-    else if (flag == 1) {   // 취소표 확인 요청
-        
-    }
-    */
-
     const start = new Date();
 
-    // for test
-    let departure = "ICN";
-    let destination = "JFK";
-    let departureDate = "20231202";
-    let finded = findFastestRoute(departure, destination);
-    
-    // for test
-    for (let id in finded) {
-        let temp = finded[id];
+    let requestBody = req.body;
+    let departure = requestBody['departure'];
+    let destination = requestBody['destination'];
+    let departureDate = requestBody['departureDate'];
+    let flag = requestBody['flag'];
 
-        console.log("path : " + temp[0] + " cost : " + temp[1]);
+    if (flag == 0) {
+        let finded = findFastestRoute(departure, destination);
+
+        let task = makeTask(departure, destination, departureDate, finded);
+        let result = await process(task);
+
+        const end = new Date();
+        console.log(end - start);
+
+        res.send(JSON.stringify(result));
     }
-
-    let task = makeTask(departure, destination, departureDate, finded);
-    let result = await process(task);
-
-    const end = new Date();
-    console.log(end - start);
-
-    res.send(JSON.stringify(result));
+    else if (flag == 1) {
+        res.send("Not implemented");
+    }
 });
 
 app.listen(port);
