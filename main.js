@@ -6,7 +6,6 @@ const jsonData = require('./data/crawled_data.json');
 const process = require('./downloader.js');
 
 const Queue = require('./classes/Queue.js');
-const FlightPath = require('./classes/FlightPath.js');
 const Task = require('./classes/Task.js');
 
 let flightCost = new Map();
@@ -43,7 +42,7 @@ app.get('/spiderbot/list', async (req, res) => {
         let result = await process(task);
 
         const end = new Date();
-        console.log(end - start);
+        // console.log(end - start);
 
         res.send(JSON.stringify(result));
     }
