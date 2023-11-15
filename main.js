@@ -18,7 +18,7 @@ app.use(express.json());
 // 5.1.7 항공편 조회 API
 /// getFlight(req, res)
 /*
-    Request Body
+    Request parameters
     {
         ‘flag’ : 0,
         ‘departure’ : ‘ICN’,
@@ -29,16 +29,16 @@ app.use(express.json());
 app.get('/spiderbot/list', async (req, res) => {
     const start = new Date();
 
-    let requestBody = req.body;
-    let departure = requestBody['departure'];
-    let destination = requestBody['destination'];
-    let departureDate = requestBody['departureDate'];
-    let flag = requestBody['flag'];
+    let {departure, destination, departureDate, flag} = req.query;
 
-    if (flag == 0) {
+    let departureDateFormatted = getFormatDate(departureDate);
+    
+    let flagFormatted = Number(flag);
+
+    if (flagFormatted == 0) {
         let finded = findFastestRoute(departure, destination);
 
-        let task = makeTask(departure, destination, departureDate, finded);
+        let task = makeTask(departure, destination, departureDateFormatted, finded);
         let result = await process(task);
 
         const end = new Date();
@@ -46,7 +46,7 @@ app.get('/spiderbot/list', async (req, res) => {
 
         res.send(JSON.stringify(result));
     }
-    else if (flag == 1) {
+    else if (flagFormatted == 1) {
         res.send("Not implemented");
     }
 });
@@ -190,4 +190,13 @@ function timeToMinutes(time) {
     } 
 
     return hours * 60;
+}
+
+function getFormatDate(date){
+    var year = date.getFullYear();              //yyyy
+    var month = (1 + date.getMonth());          //M
+    month = month >= 10 ? month : '0' + month;  //month 두자리로 저장
+    var day = date.getDate();                   //d
+    day = day >= 10 ? day : '0' + day;          //day 두자리로 저장
+    return  year + '' + month + '' + day;       //'-' 추가하여 yyyy-mm-dd 형태 생성 가능
 }
