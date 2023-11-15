@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const port = 3000;
 
@@ -14,6 +15,7 @@ let graph = new Map();
 init();
 
 app.use(express.json());
+app.use(cors());
 
 // 5.1.7 항공편 조회 API
 /// getFlight(req, res)
