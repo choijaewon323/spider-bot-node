@@ -33,12 +33,18 @@ app.get('/spiderbot/list', async (req, res) => {
 
     //console.log("get entered");
 
+    let year = departureDate.substring(0, 4);
+    let month = departureDate.substring(4, 6);
+    let day = departureDate.substring(6);
+
+    let datedDepartureDate = new Date(`${year}-${month}-${day}T00:00:00`);
+
     if (flag == 0) {
         let finded = findFastestRoute(departure, destination);
 
         //printFinded(finded);
 
-        let task = makeTask(departure, destination, departureDate, finded);
+        let task = makeTask(departure, destination, datedDepartureDate, finded);
         let result = await process(task);
 
         res.send(JSON.stringify(result));

@@ -39,25 +39,19 @@ module.exports = async function process(task) {
     let destination = task.destination;
     let departureDate = task.departureDate;
     let paths = task.paths;
-    
-    let result = [];
-    let allPromise = [];
 
     //console.log("process entered");
 
     for (let present of paths) {
         let path = present[0];
-        let promise = runThread(present, departureDate);
-        allPromise.push(promise);
+        let result = await runThread(present, departureDate);
+
+        if (result.length != 0) {
+            return result;
+        }
     }
 
-    let promiseResult = await Promise.all(allPromise);
-
-    for (let temp of promiseResult) {
-        result.push(...temp);
-    }
-
-    return result;
+    return [];
 }
 
 function runThread(present, departureDate) {

@@ -6,61 +6,40 @@ module.exports = async function executeCrawling (present) {
     let path = present[0];  // Array
     let cost = present[1];  // Integer
     let departureDate = present[2];
-    let pathLength = path.length;
 
-    let resultPerRoute = [];
-
-    //console.log("executeCrawling entered");
-
-    let flag = true;
-    for (let i = 0; i < pathLength - 1; i++) {
-        let start = path[i];
-        let end = path[i + 1];
-
-        let temp = await crawl([start, end, departureDate]);
-
-        if (temp.length === 0) {
-            flag = false;
-            break;
-        }
-
-        resultPerRoute.push(temp);
-    }
-
-    // evaluate : 만약 route들 중 하나라도 비어있으면, 무효화
+    //console.log("ENTER THREAD");
 
     let tickets = [];
 
-    if (flag) {
-        makeTicket(resultPerRoute, [], 0, path, tickets);
-    }
+    await makeTicket(path, departureDate, [], 0, tickets);
 
     return tickets;
 }
 
-function makeTicket(resultPerPath, tempArray, index, path, result) {
-    if (tempArray.length === 0) {
-        let routes = resultPerPath[index];
-
-        for (let route of routes) {
-            tempArray.push(route);
-            makeTicket(resultPerPath, tempArray, index + 1, path, result);
-            tempArray.pop();
-        }
-
+async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets) {
+    if (presentIndex == path.length - 1) {
+        tickets.push(new Ticket(Object.assign([], tempRoutes)));
+        
         return;
     }
+    
+    let start = path[presentIndex];
+    let end = path[presentIndex + 1];
+    let parameter = [start, end, departureDate];
 
-    if (index == resultPerPath.length) {
-        result.push(new Ticket(Object.assign([], tempArray)));
-        return;
-    }
-
-    let routes = resultPerPath[index];
+    let routes = await crawl(parameter);
 
     for (let route of routes) {
-        tempArray.push(route);
-        makeTicket(resultPerPath, tempArray, index + 1, path, result);
-        tempArray.pop();
+        let destinationDate = route.destinationDate;
+
+        let diffMSec = destinationDate - departureDate;
+        let diffDate = diffMSec / (24 * 60 * 60 * 1000);
+        let diffMin = diffMSec / (60 * 1000);
+        
+        if (diffDate >= 1 || diffMin >= 30) {
+            tempRoutes.push(route);
+            await makeTicket(path, destinationDate, tempRoutes, presentIndex + 1, tickets);
+            tempRoutes.pop();
+        }
     }
 }
