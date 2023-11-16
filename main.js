@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 3000;
+const port = 8000;
 
 const jsonData = require('./data/crawled_data.json');
 const process = require('./downloader.js');
@@ -22,38 +22,39 @@ app.use(cors());
 /*
     Request parameters
     {
-        ‘flag’ : 0,
-        ‘departure’ : ‘ICN’,
-        ‘destination’ : ‘JFK’,
-        ‘departureDate’ : ‘2023-10-17’
+        flag : 0,
+        departure : ICN,
+        destination : JFK,
+        departureDate : 20231017
     }
 */
 app.get('/spiderbot/list', async (req, res) => {
-    const start = new Date();
-
     let {departure, destination, departureDate, flag} = req.query;
 
-    let departureDateFormatted = getFormatDate(departureDate);
-    
-    let flagFormatted = Number(flag);
+    //console.log("get entered");
 
-    if (flagFormatted == 0) {
+    if (flag == 0) {
         let finded = findFastestRoute(departure, destination);
 
-        let task = makeTask(departure, destination, departureDateFormatted, finded);
-        let result = await process(task);
+        //printFinded(finded);
 
-        const end = new Date();
-        // console.log(end - start);
+        let task = makeTask(departure, destination, departureDate, finded);
+        let result = await process(task);
 
         res.send(JSON.stringify(result));
     }
-    else if (flagFormatted == 1) {
+    else if (flag == 1) {
         res.send("Not implemented");
     }
 });
 
 app.listen(port);
+
+function printFinded(finded) {
+    for (let temp of finded) {
+        console.log("path : " + temp[0] + " / cost : " + temp[1]); 
+    }
+}
 
 /*
     input
@@ -142,7 +143,13 @@ function findFastestRoute(departure, destination) {
         pathTimes.push([path, totalMinutes]);
     }
 
+    pathTimes.sort(compare);
+
     return pathTimes;
+}
+
+function compare(first, second) {
+    return first[1] - second[1];
 }
 
 /*
@@ -192,13 +199,4 @@ function timeToMinutes(time) {
     } 
 
     return hours * 60;
-}
-
-function getFormatDate(date){
-    var year = date.getFullYear();              //yyyy
-    var month = (1 + date.getMonth());          //M
-    month = month >= 10 ? month : '0' + month;  //month 두자리로 저장
-    var day = date.getDate();                   //d
-    day = day >= 10 ? day : '0' + day;          //day 두자리로 저장
-    return  year + '' + month + '' + day;       //'-' 추가하여 yyyy-mm-dd 형태 생성 가능
 }

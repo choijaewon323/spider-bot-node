@@ -11,6 +11,8 @@ module.exports = async function crawl(value) {
         headless: 'new'
     });
 
+    //console.log("crawl entered");
+
     const page = await browser.newPage();
 
     await page.viewport({
@@ -24,6 +26,8 @@ module.exports = async function crawl(value) {
     const URL = `https://m-flight.naver.com/flights/international/${departure}-${destination}-${departureDate}?adult=1&isDirect=true&fareType=Y`;
 
     await page.goto(URL);
+
+    //console.log("entered page");
 
     await page.waitForSelector('#__next > div > div.container > div.international_content__2Z9HD > div > div.header_InternationalHeader__16F2u > div');
 
@@ -41,7 +45,7 @@ module.exports = async function crawl(value) {
         const priceTag = await element.$('.item_num__3R0Vz')
         const price = await priceTag.evaluate(el => el.textContent);
 
-        result.push(new Route(airline, departure, destination, startTime, endTime, date, price));
+        result.push(new Route(airline, departure, destination, startTime, endTime, date, parseInt(price.split(',').join(""))));
     }
 
     await browser.close();

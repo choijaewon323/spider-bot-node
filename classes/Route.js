@@ -1,20 +1,38 @@
 module.exports = class Route {
     airline;
+    flightNumber;   // 0
+    departureTime;
+    destinationTime;
+    price;
     departure;
     destination;
-    departureTime;
-    arrivedTime;
+    link;   // #
     timeTaken;
-    price;
+    isSoldOut;  // false;
 
-    constructor (airline, departure, destination, departureTime, arrivedTime, timeTaken, price) {
+    constructor (airline, departure, destination, departureTime, destinationTime, timeTaken, price) {
         this.airline = airline;
         this.departure = departure;
         this.destination = destination;
         this.departureTime = departureTime;
-        this.arrivedTime = arrivedTime;
+        this.destinationTime = destinationTime;
         this.timeTaken = timeTaken;
         this.price = price;
+        this.flightNumber = 0;
+        this.link = "#";
+        this.isSoldOut = false;
+    }
+
+    get flightNumber() {
+        return this.flightNumber;
+    }
+
+    get link() {
+        return this.link;
+    }
+
+    get isSoldOut() {
+        return this.isSoldOut;
     }
 
     get airline() {

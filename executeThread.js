@@ -10,6 +10,8 @@ module.exports = async function executeCrawling (present) {
 
     let resultPerRoute = [];
 
+    //console.log("executeCrawling entered");
+
     let flag = true;
     for (let i = 0; i < pathLength - 1; i++) {
         let start = path[i];
@@ -50,7 +52,7 @@ function makeTicket(resultPerPath, tempArray, index, path, result) {
     }
 
     if (index == resultPerPath.length) {
-        result.push(new Ticket(path, Object.assign([], tempArray)));
+        result.push(new Ticket(Object.assign([], tempArray)));
         return;
     }
 

@@ -43,6 +43,8 @@ module.exports = async function process(task) {
     let result = [];
     let allPromise = [];
 
+    //console.log("process entered");
+
     for (let present of paths) {
         let path = present[0];
         let promise = runThread(present, departureDate);
@@ -55,7 +57,7 @@ module.exports = async function process(task) {
         result.push(...temp);
     }
 
-    return new TicketList(result);
+    return result;
 }
 
 function runThread(present, departureDate) {

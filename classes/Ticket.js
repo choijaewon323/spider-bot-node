@@ -1,17 +1,11 @@
 module.exports = class Ticket {
-    path;   // Array<string>
-    routes; // Array<Route>
+    stopover; // Array<Route>
 
-    constructor (path, routes) {
-        this.path = path;
-        this.routes = routes;
+    constructor (stopover) {
+        this.stopover = stopover;
     }
 
-    get path() {
-        return this.path;
-    }
-
-    get routes() {
-        return this.routes;
+    get stopover() {
+        return this.stopover;
     }
 }
