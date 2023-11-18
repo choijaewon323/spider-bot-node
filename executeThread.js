@@ -1,8 +1,8 @@
 const crawl = require('./crawlingThread.js');
-
+const koreanAirCrawl = require('./crawlingThread.js');
 const Ticket = require('./classes/Ticket');
 
-module.exports = async function executeCrawling (present) {
+module.exports = async function executeCrawling (present, flag) {
     let path = present[0];  // Array
     let cost = present[1];  // Integer
     let departureDate = present[2];
@@ -11,9 +11,42 @@ module.exports = async function executeCrawling (present) {
 
     let tickets = [];
 
-    await makeTicket(path, departureDate, [], 0, tickets);
+    if (flag == 0) {
+        await makeTicketByKoreanAir(path, departureDate, [], 0, tickets);
+    }
+    else {
+        await makeTicket(path, departureDate, [], 0, tickets);
+    }
 
     return tickets;
+}
+
+async function makeTicketByKoreanAir(path, departureDate, tempRoutes, presentIndex, tickets) {
+    if (presentIndex == path.length - 1) {
+        tickets.push(new Ticket(Object.assign([], tempRoutes)));
+        
+        return;
+    }
+    
+    let start = path[presentIndex];
+    let end = path[presentIndex + 1];
+    let parameter = [start, end, departureDate];
+
+    let routes = await koreanAirCrawl(parameter);
+
+    for (let route of routes) {
+        let destinationDate = route.destinationDate;
+
+        let diffMSec = destinationDate - departureDate;
+        let diffDate = diffMSec / (24 * 60 * 60 * 1000);
+        let diffMin = diffMSec / (60 * 1000);
+        
+        if (diffDate >= 1 || diffMin >= 30) {
+            tempRoutes.push(route);
+            await makeTicketByKoreanAir(path, destinationDate, tempRoutes, presentIndex + 1, tickets);
+            tempRoutes.pop();
+        }
+    }
 }
 
 async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets) {

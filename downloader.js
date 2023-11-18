@@ -42,9 +42,16 @@ module.exports = async function process(task) {
 
     //console.log("process entered");
 
+    let directPath = [[departure, destination], 0];
+    let koreanAirResult = await runThread(directPath, departureDate, 0);
+
+    if (koreanAirResult.length > 0) {
+        return koreanAirResult;
+    }
+
     for (let present of paths) {
         let path = present[0];
-        let result = await runThread(present, departureDate);
+        let result = await runThread(present, departureDate, 1);
 
         if (result.length != 0) {
             return result;
@@ -54,11 +61,11 @@ module.exports = async function process(task) {
     return [];
 }
 
-function runThread(present, departureDate) {
+function runThread(present, departureDate, flag) {
     return new Promise(async (resolve, reject) => {
         present.push(departureDate);
         
-        let resultPerPath = await executeCrawling(present);
+        let resultPerPath = await executeCrawling(present, flag);
         resolve(resultPerPath);
     })
 }
