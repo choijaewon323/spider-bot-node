@@ -1,5 +1,4 @@
-const crawl = require('./crawlingThread.js');
-const koreanAirCrawl = require('./crawlingThread.js');
+const {crawl, koreanAirCrawl} = require('./crawlingThread.js');
 const Ticket = require('./classes/Ticket');
 
 module.exports = async function executeCrawling (present, flag) {

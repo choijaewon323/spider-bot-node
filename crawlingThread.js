@@ -5,7 +5,9 @@ const Route = require("./classes/Route.js");
 /*
     return : Route[]
 */
-module.exports = async function crawl(value) {
+module.exports = {crawl, koreanAirCrawl};
+
+async function crawl(value) {
     const browser = await puppeteer.launch({
         timeout: 0,
         headless: 'new'
@@ -76,7 +78,7 @@ module.exports = async function crawl(value) {
     return result;
 }
 
-module.exports = async function koreanAirCrawl(value) {
+async function koreanAirCrawl(value) {
     const browser = await puppeteer.launch({
         timeout: 0,
         headless: false
@@ -190,8 +192,14 @@ async function download(page, departure, destination, year, month, day) {
     }, filter[0]);
     await filter[0].click();
 
-    let direct = await page.waitForXPath('/html/body/ke-dynamic-modal/div/div/div[2]/div/div/div[1]/div[2]/div/div[2]/label');
+    let direct = await page.waitForXPath('/html/body/ke-dynamic-modal/div/div/div[2]/div/div/div[1]/div[2]/div/div[2]/input');
     await delay(1000);
+    let disabled = await page.evaluate(direct => direct.disabled, direct);
+
+    if (disabled) {
+        return [];
+    }
+
     await direct.click();
     let directConfirm = await page.$x('/html/body/ke-dynamic-modal/div/div/div[2]/div/div/div[2]/div/button');
     await directConfirm[0].evaluate(el => el.scrollIntoView());

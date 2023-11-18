@@ -42,7 +42,7 @@ app.get('/spiderbot/list', async (req, res) => {
     if (flag == 0) {
         let finded = findFastestRoute(departure, destination);
 
-        //printFinded(finded);
+        printFinded(finded);
 
         let task = makeTask(departure, destination, datedDepartureDate, finded);
         let result = await process(task);
