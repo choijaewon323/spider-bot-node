@@ -50,7 +50,12 @@ async function crawl(value) {
     const list = await page.$$('.indivisual_IndivisualItem__3co62');
     let result = [];
 
-    for (let element of list) {
+    const listLength = list.length;
+
+    for (let idx = 0; idx < listLength; idx++) {
+        const tempList = await page.$$('.indivisual_IndivisualItem__3co62');
+        const element = tempList[idx];
+
         const airlineTag = await element.$(".airline > .name");
         const airline = await airlineTag.evaluate(el => el.textContent);
         const times = await element.$$(".route_time__-2Z1T");
@@ -69,8 +74,26 @@ async function crawl(value) {
         if (nextDayTag != null) {
             fullEndDate = new Date(fullEndDate.setDate(fullEndDate.getDate() + 1));
         }
+
+        // get flightNumber
+        await element.click();
+        let detailed = await page.$$('.item_item__3lHPP');
+        if (detailed.length > 0) {
+            await detailed[0].click();
+        }
+
+        let lookup = await page.waitForSelector('.detailSchedule_toggle__1DUr3');
+        await lookup.click();
+
+        let tag = await page.$('.detailSchedule_info__19ykj');
+        let strs = await tag.evaluate(el => el.textContent);
+        let flightNumber = strs.split(' ');
+
         //airline, departure, destination, fullStartDate, fullEndDate, totalTime, price, flightNumber, isSoldOut
-        result.push(new Route(airline, departure, destination, fullStartDate, fullEndDate, date, parseInt(price.split(',').join("")), "", false));
+        result.push(new Route(airline, departure, destination, fullStartDate, fullEndDate, date, parseInt(price.split(',').join("")), flightNumber[0], false));
+        
+        const closeButton = await page.$x('/html/body/div[1]/div/div[1]/div[6]/div/div[1]/div/div/div[1]/button');
+        await closeButton[0].click();
     }
 
     await browser.close();
