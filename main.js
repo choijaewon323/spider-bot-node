@@ -17,32 +17,19 @@ init();
 app.use(express.json());
 app.use(cors());
 
-// 5.1.7 항공편 조회 API
-/// getFlight(req, res)
-/*
-    Request parameters
-    {
-        flag : 0,
-        departure : ICN,
-        destination : JFK,
-        departureDate : 20231017
-    }
-*/
 app.get('/spiderbot/list', async (req, res) => {
     let {departure, destination, departureDate, flag} = req.query;
-
-    //console.log("get entered");
 
     let year = departureDate.substring(0, 4);
     let month = departureDate.substring(4, 6);
     let day = departureDate.substring(6);
 
-    let datedDepartureDate = new Date(`${year}-${month}-${day}T00:00:00`);
+    let datedDepartureDate = new Date(Date.UTC(
+        Number(year), Number(month) - 1, Number(day) 
+    ));
 
     if (flag == 0) {
         let finded = findFastestRoute(departure, destination);
-
-        //printFinded(finded);
 
         let task = makeTask(departure, destination, datedDepartureDate, finded);
         let result = await process(task);
@@ -62,14 +49,6 @@ function printFinded(finded) {
     }
 }
 
-/*
-    input
-        departure : string
-        destination : string
-
-    output
-        paths : ex ) [[path1], [path2], [path3]]
-*/
 function bfs_search(departure, destination) {
     let visited = [];
     
@@ -120,13 +99,6 @@ function bfs_search(departure, destination) {
     return paths;
 }
 
-/*
-    input
-        departure, destination
-    
-    output
-        pathTimes [[path1, cost1], [path2, cost2], ...]
-*/
 function findFastestRoute(departure, destination) {
     let paths = bfs_search(departure, destination);
 
@@ -158,13 +130,6 @@ function compare(first, second) {
     return first[1] - second[1];
 }
 
-/*
-    input
-        departure, destination, departureDate, paths
-    
-    output
-        Task 객체
-*/
 function makeTask(departure, destination, departureDate, paths) {
     return new Task(departure, destination, departureDate, paths);
 }

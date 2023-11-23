@@ -10,7 +10,7 @@ module.exports = class Route {
     timeTaken;
     isSoldOut;  // false;
 
-    constructor (airline, departure, destination, departureDate, destinationDate, timeTaken, price, flightNumber, isSoldOut) {
+    constructor (airline, departure, destination, departureDate, destinationDate, timeTaken, price, flightNumber, isSoldOut, link) {
         this.airline = airline;
         this.departure = departure;
         this.destination = destination;
@@ -19,7 +19,7 @@ module.exports = class Route {
         this.timeTaken = timeTaken;
         this.price = price;
         this.flightNumber = flightNumber;
-        this.link = "#";
+        this.link = link;
         this.isSoldOut = isSoldOut;
     }
 

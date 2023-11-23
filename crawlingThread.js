@@ -2,18 +2,13 @@ const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const Route = require("./classes/Route.js");
 
-/*
-    return : Route[]
-*/
-module.exports = {crawl, koreanAirCrawl};
+module.exports = {crawl};
 
 async function crawl(value) {
     const browser = await puppeteer.launch({
         timeout: 0,
         headless: 'new'
     });
-
-    //console.log("crawl entered");
 
     const page = await browser.newPage();
 
@@ -26,9 +21,12 @@ async function crawl(value) {
     let destination = value[1];     // String
     let departureDate = value[2];   // Date
 
-    let year = departureDate.getFullYear().toString();
-    let month = (departureDate.getMonth() + 1).toString();
-    let day = departureDate.getDate().toString();
+    let d = new Date();
+    d.getUTCMonth()
+
+    let year = departureDate.getUTCFullYear().toString();
+    let month = (departureDate.getUTCMonth() + 1).toString();
+    let day = departureDate.getUTCDate().toString();
 
     if (month.length == 1) {
         month = "0" + month;
@@ -39,13 +37,13 @@ async function crawl(value) {
 
     let searchDate = year + month + day;
 
-    const URL = `https://m-flight.naver.com/flights/international/${departure}-${destination}-${searchDate}?adult=1&isDirect=true&fareType=Y`;
+    const url = `https://m-flight.naver.com/flights/international/${departure}-${destination}-${searchDate}?adult=1&isDirect=true&fareType=Y`;
 
-    await page.goto(URL);
+    await page.goto(url);
 
-    //console.log("entered page");
+    await page.waitForSelector('.header_InternationalHeader__16F2u');
 
-    await page.waitForSelector('#__next > div > div.container > div.international_content__2Z9HD > div > div.header_InternationalHeader__16F2u > div');
+    await page.waitForFunction(() => !document.querySelector(".loadingProgress_loadingProgress__1LRJo"));
 
     const list = await page.$$('.indivisual_IndivisualItem__3co62');
     let result = [];
@@ -54,6 +52,7 @@ async function crawl(value) {
 
     for (let idx = 0; idx < listLength; idx++) {
         const tempList = await page.$$('.indivisual_IndivisualItem__3co62');
+        await page.waitForSelector('.indivisual_IndivisualItem__3co62');
         const element = tempList[idx];
 
         const airlineTag = await element.$(".airline > .name");
@@ -68,38 +67,58 @@ async function crawl(value) {
         
         const nextDayTag = await element.$(".route_extra__xjOtx");
         
-        let fullStartDate = new Date(`${year}-${month}-${day}T${startTime}:00`);
-        let fullEndDate = new Date(`${year}-${month}-${day}T${endTime}:00`)
+        const startTimes = startTime.split(':');
+        const endTimes = endTime.split(':');
+
+        let fullStartDate = new Date(Date.UTC(
+            departureDate.getUTCFullYear(), departureDate.getUTCMonth(), departureDate.getUTCDate(), 
+            Number(startTimes[0]), Number(startTimes[1]), 0
+        ));
+        
+        let fullEndDate = new Date(Date.UTC(
+            departureDate.getUTCFullYear(), departureDate.getUTCMonth(), departureDate.getUTCDate(), 
+            Number(endTimes[0]), Number(endTimes[1]), 0
+        ));
 
         if (nextDayTag != null) {
-            fullEndDate = new Date(fullEndDate.setDate(fullEndDate.getDate() + 1));
+            fullEndDate.setUTCDate(fullEndDate.getUTCDate() + 1);
         }
 
         // get flightNumber
         await element.click();
-        let detailed = await page.$$('.item_item__3lHPP');
+        let detailed = await element.$$('.item_item__3lHPP');
         if (detailed.length > 0) {
             await detailed[0].click();
         }
 
-        let lookup = await page.waitForSelector('.detailSchedule_toggle__1DUr3');
-        await lookup.click();
+        let link = await page.url();
 
-        let tag = await page.$('.detailSchedule_info__19ykj');
-        let strs = await tag.evaluate(el => el.textContent);
-        let flightNumber = strs.split(' ');
+        const tempURL = new URL(link);
+
+        let flightNumberStr = tempURL.searchParams.get('selectedFlight');
+        let strs = flightNumberStr.split(':');
+        let flightNumber = strs[1].substring(14);
 
         //airline, departure, destination, fullStartDate, fullEndDate, totalTime, price, flightNumber, isSoldOut
-        result.push(new Route(airline, departure, destination, fullStartDate, fullEndDate, date, parseInt(price.split(',').join("")), flightNumber[0], false));
+        result.push(new Route(airline, departure, destination, fullStartDate, fullEndDate, date, parseInt(price.split(',').join("")), flightNumber, false, link));
         
         const closeButton = await page.$x('/html/body/div[1]/div/div[1]/div[6]/div/div[1]/div/div/div[1]/button');
         await closeButton[0].click();
     }
 
+    await page.close();
     await browser.close();
 
     return result;
 }
+
+function delay(time) {
+    return new Promise(function(resolve) {
+        setTimeout(resolve, time);
+    })
+}
+
+/*
 
 async function koreanAirCrawl(value) {
     const browser = await puppeteer.launch({
@@ -283,3 +302,4 @@ async function download(page, departure, destination, year, month, day) {
     }
     return result;
 }
+*/
