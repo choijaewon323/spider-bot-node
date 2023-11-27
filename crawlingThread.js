@@ -85,10 +85,18 @@ async function crawl(value) {
         }
 
         // get flightNumber
-        await element.click();
-        let detailed = await element.$$('.item_item__3lHPP');
+        
+        let elementButton = await element.$('.indivisual_select_schedule__h2pp1');
+        await elementButton.evaluate(e => e.scrollIntoView({behavior: 'auto',
+        block: 'center',
+        inline: 'center'}));
+        await elementButton.evaluate(b => b.click());
+        let detailed = await element.$$('.item_anchor__2CGzx');
         if (detailed.length > 0) {
-            await detailed[0].click();
+            await detailed[0].evaluate(e => e.scrollIntoView({behavior: 'auto',
+            block: 'center',
+            inline: 'center'}));
+            await detailed[0].evaluate(b => b.click());
         }
 
         let link = await page.url();
@@ -102,8 +110,11 @@ async function crawl(value) {
         //airline, departure, destination, fullStartDate, fullEndDate, totalTime, price, flightNumber, isSoldOut
         result.push(new Route(airline, departure, destination, fullStartDate, fullEndDate, date, parseInt(price.split(',').join("")), flightNumber, false, link));
         
-        const closeButton = await page.$x('/html/body/div[1]/div/div[1]/div[6]/div/div[1]/div/div/div[1]/button');
-        await closeButton[0].click();
+        const closeButton = await page.$('.detailSchedule_delete__2G2TT');
+        await closeButton.evaluate(e => e.scrollIntoView({behavior: 'auto',
+        block: 'center',
+        inline: 'center'}));
+        await closeButton.evaluate(b => b.click());
     }
 
     await page.close();

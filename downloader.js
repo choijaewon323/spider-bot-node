@@ -17,9 +17,11 @@ module.exports = async function process(task) {
         return directResult;
     }
 
+    let cache = new Map();
+
     for (let present of paths) {
         let path = present[0];
-        let result = await runThread(present, departureDate, 1);
+        let result = await runThread(present, departureDate, 1, cache);
 
         if (result.length != 0) {
             return result;
@@ -29,11 +31,11 @@ module.exports = async function process(task) {
     return [];
 }
 
-function runThread(present, departureDate, flag) {
+function runThread(present, departureDate, flag, cache) {
     return new Promise(async (resolve, reject) => {
         present.push(departureDate);
         
-        let resultPerPath = await executeCrawling(present, flag);
+        let resultPerPath = await executeCrawling(present, flag, cache);
         resolve(resultPerPath);
     })
 }

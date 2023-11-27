@@ -46,6 +46,7 @@ app.get('/spiderbot/list', async (req, res) => {
 app.post('/spiderbot/monitor', async (req, res) => {
     let promises = [];
     let flightNumbers = [];
+    let cache = new Map();
 
     for (let key in req.body) {
         if (req.body.hasOwnProperty(key)) {
@@ -62,7 +63,7 @@ app.post('/spiderbot/monitor', async (req, res) => {
             flightNumbers.push(flightNumber);
             
             let present = [[departure, destination], 0];
-            let promise = runThread(present, departureDateUTC, 0);
+            let promise = runThread(present, departureDateUTC, 0, cache);
             promises.push(promise);
         }
     }
@@ -106,11 +107,11 @@ function isAllCorrect(flightNumbers, results) {
     return false;
 }
 
-function runThread(present, departureDate, flag) {
+function runThread(present, departureDate, flag, cache) {
     return new Promise(async (resolve, reject) => {
         present.push(departureDate);
         
-        let resultPerPath = await executeCrawling(present, flag);
+        let resultPerPath = await executeCrawling(present, flag, cache);
         resolve(resultPerPath);
     })
 }

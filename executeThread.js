@@ -1,7 +1,7 @@
 const {crawl} = require('./crawlingThread.js');
 const Ticket = require('./classes/Ticket');
 
-module.exports = async function executeCrawling (present, flag) {
+module.exports = async function executeCrawling (present, flag, cache) {
     let path = present[0];  // Array
     let cost = present[1];  // Integer
     let departureDate = present[2];
@@ -14,7 +14,7 @@ module.exports = async function executeCrawling (present, flag) {
         return tickets;
     }
 
-    await makeTicket(path, departureDate, [], 0, tickets);
+    await makeTicket(path, departureDate, [], 0, tickets, cache);
 
     return tickets;
 }
@@ -30,7 +30,7 @@ async function directTicket(parameter, tickets) {
     }
 }
 
-async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets) {
+async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets, cache) {
     if (presentIndex == path.length - 1) {
         tickets.push(new Ticket(Object.assign([], tempRoutes)));
         
@@ -41,14 +41,23 @@ async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets
         let start = path[presentIndex];
         let end = path[presentIndex + 1];
         let parameter = [start, end, departureDate];
+        
+        let routes;
+        let key = makeKey(start, end, departureDate);
 
-        let routes = await crawl(parameter);
+        if (cache.has(key)) {
+            routes = cache.get(key);
+        }
+        else {
+            routes = await crawl(parameter);
+            cache.set(key, routes);
+        }
 
         for (let route of routes) {
             let destinationDate = route.destinationDate;
     
             tempRoutes.push(route);
-            await makeTicket(path, destinationDate, tempRoutes, presentIndex + 1, tickets);
+            await makeTicket(path, destinationDate, tempRoutes, presentIndex + 1, tickets, cache);
             tempRoutes.pop();
         }
 
@@ -59,7 +68,16 @@ async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets
     let end = path[presentIndex + 1];
     let parameter = [start, end, departureDate];
 
-    let routes = await crawl(parameter);
+    let routes;
+    let key = makeKey(start, end, departureDate);
+
+    if (cache.has(key)) {
+        routes = cache.get(key);
+    }
+    else {
+        routes = await crawl(parameter);
+        cache.set(key, routes);
+    }
 
     for (let route of routes) {
         let tempDeparture = route.departureDate;
@@ -67,10 +85,24 @@ async function makeTicket(path, departureDate, tempRoutes, presentIndex, tickets
 
         if (isTimeCorrect(departureDate, tempDeparture)) {
             tempRoutes.push(route);
-            await makeTicket(path, destinationDate, tempRoutes, presentIndex + 1, tickets);
+            await makeTicket(path, destinationDate, tempRoutes, presentIndex + 1, tickets, cache);
             tempRoutes.pop();
         }
     }
+}
+
+function makeKey(start, end, departureDate) {
+    let dateString = yearMonthDate(departureDate);
+
+    return start + end + dateString;
+}
+
+function yearMonthDate(departureDate) {
+    let year = String(departureDate.getUTCFullYear());
+    let month = String(departureDate.getUTCMonth());
+    let date = String(departureDate.getUTCDate());
+
+    return year + month + date;
 }
 
 function isTimeCorrect(departureDate, destinationDate) {
