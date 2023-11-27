@@ -8,9 +8,13 @@ module.exports = async function executeCrawling (present, flag) {
 
     let tickets = [];
 
-    let parameter = [path[0], path[1], departureDate];
-    await directTicket(parameter, tickets);
-    // await makeTicket(path, departureDate, [], 0, tickets);
+    if (flag == 0) {
+        let parameter = [path[0], path[path.length - 1], departureDate];
+        await directTicket(parameter, tickets);
+        return tickets;
+    }
+
+    await makeTicket(path, departureDate, [], 0, tickets);
 
     return tickets;
 }

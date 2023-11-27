@@ -9,6 +9,8 @@ const process = require('./downloader.js');
 const Queue = require('./classes/Queue.js');
 const Task = require('./classes/Task.js');
 
+const executeCrawling = require('./executeThread.js');
+
 let flightCost = new Map();
 let graph = new Map();
 
@@ -40,6 +42,78 @@ app.get('/spiderbot/list', async (req, res) => {
         res.send("Not implemented");
     }
 });
+
+app.post('/spiderbot/monitor', async (req, res) => {
+    let promises = [];
+    let flightNumbers = [];
+
+    for (let key in req.body) {
+        if (req.body.hasOwnProperty(key)) {
+            let item = req.body[key];
+            
+            let departure = item.departure;
+            let destination = item.destination;
+            let departureDate = new Date(item.departureDate);
+            let departureDateUTC = new Date(Date.UTC(departureDate.getUTCFullYear(), departureDate.getUTCMonth(), 
+                                            departureDate.getUTCDate(), departureDate.getUTCHours(),
+                                            departureDate.getUTCMinutes(), departureDate.getUTCSeconds()) 
+                                        );
+            let flightNumber = item.flightNumber;
+            flightNumbers.push(flightNumber);
+            
+            let present = [[departure, destination], 0];
+            let promise = runThread(present, departureDateUTC, 0);
+            promises.push(promise);
+        }
+    }
+
+    let results = await Promise.all(promises);
+
+    let match = isAllCorrect(flightNumbers, results);
+
+    if (match) {
+        res.send(true);
+    }
+    else {
+        res.send(false);
+    }
+})
+
+function isAllCorrect(flightNumbers, results) {
+    let resultLength = results.length;
+
+    if (flightNumbers.length != resultLength) {
+        return false;
+    }
+
+    if (resultLength == 0) {
+        return false;
+    }
+
+    for (let i = 0; i < resultLength; i++) {
+        let flightNumber = flightNumbers[i];
+
+        for (let ticket of results[i]) {
+            let stopover = ticket.stopover;
+            let route = stopover[0];
+            
+            if (route.flightNumber == flightNumber) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function runThread(present, departureDate, flag) {
+    return new Promise(async (resolve, reject) => {
+        present.push(departureDate);
+        
+        let resultPerPath = await executeCrawling(present, flag);
+        resolve(resultPerPath);
+    })
+}
 
 app.listen(port);
 

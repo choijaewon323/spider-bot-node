@@ -11,13 +11,12 @@ module.exports = async function process(task) {
     let paths = task.paths;
 
     let direct = [[departure, destination], 0];
-    let directResult = await runThread(direct, departureDate, 1);
+    let directResult = await runThread(direct, departureDate, 0);
 
     if (directResult.length != 0) {
         return directResult;
     }
 
-    /*
     for (let present of paths) {
         let path = present[0];
         let result = await runThread(present, departureDate, 1);
@@ -26,7 +25,6 @@ module.exports = async function process(task) {
             return result;
         }
     }
-    */
 
     return [];
 }

@@ -7,7 +7,7 @@ module.exports = {crawl};
 async function crawl(value) {
     const browser = await puppeteer.launch({
         timeout: 0,
-        headless: 'new'
+        headless: false
     });
 
     const page = await browser.newPage();
