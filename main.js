@@ -22,6 +22,7 @@ app.use(cors());
 app.get('/spiderbot/list', async (req, res) => {
     let {departure, destination, departureDate, flag} = req.query;
 
+    /*
     let year = departureDate.substring(0, 4);
     let month = departureDate.substring(4, 6);
     let day = departureDate.substring(6);
@@ -29,17 +30,28 @@ app.get('/spiderbot/list', async (req, res) => {
     let datedDepartureDate = new Date(Date.UTC(
         Number(year), Number(month) - 1, Number(day) 
     ));
+    */
 
     if (flag == 0) {
-        let finded = findFastestRoute(departure, destination);
+        let fastestRoute = findFastestRoute(departure, destination);
 
-        let task = makeTask(departure, destination, datedDepartureDate, finded);
+        let task = makeTask(departure, destination, utcDepartureDate(departureDate), fastestRoute);
         let result = await process(task);
 
         res.send(JSON.stringify(result));
     }
     else if (flag == 1) {
         res.send("Not implemented");
+    }
+
+    function utcDepartureDate(departureDate) {
+        let year = departureDate.substring(0, 4);
+        let month = departureDate.substring(4, 6);
+        let day = departureDate.substring(6);
+
+        return new Date(Date.UTC(
+            Number(year), Number(month) - 1, Number(day) 
+        ));
     }
 });
 

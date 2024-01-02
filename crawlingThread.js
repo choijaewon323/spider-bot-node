@@ -45,17 +45,18 @@ async function crawl(value) {
 
     await page.waitForFunction(() => !document.querySelector(".loadingProgress_loadingProgress__1LRJo"));
 
-    const list = await page.$$('.indivisual_IndivisualItem__3co62');
+    const list = await page.$$('.indivisual_IndivisualItem__3co62.result');
     let result = [];
 
     const listLength = list.length;
 
     for (let idx = 0; idx < listLength; idx++) {
-        const tempList = await page.$$('.indivisual_IndivisualItem__3co62');
-        await page.waitForSelector('.indivisual_IndivisualItem__3co62');
+        const tempList = await page.$$('.indivisual_IndivisualItem__3co62.result');
+        await page.waitForSelector('.indivisual_IndivisualItem__3co62.result');
         const element = tempList[idx];
 
-        const airlineTag = await element.$(".airline > .name");
+
+        const airlineTag = await element.$(".airline_Airlines__8QpMj");
         const airline = await airlineTag.evaluate(el => el.textContent);
         const times = await element.$$(".route_time__-2Z1T");
         let startTime = await times[0].evaluate(el => el.textContent);
