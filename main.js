@@ -22,16 +22,6 @@ app.use(cors());
 app.get('/spiderbot/list', async (req, res) => {
     let {departure, destination, departureDate, flag} = req.query;
 
-    /*
-    let year = departureDate.substring(0, 4);
-    let month = departureDate.substring(4, 6);
-    let day = departureDate.substring(6);
-
-    let datedDepartureDate = new Date(Date.UTC(
-        Number(year), Number(month) - 1, Number(day) 
-    ));
-    */
-
     if (flag == 0) {
         let fastestRoute = findFastestRoute(departure, destination);
 
@@ -39,10 +29,11 @@ app.get('/spiderbot/list', async (req, res) => {
         let result = await process(task);
 
         res.send(JSON.stringify(result));
+        
+        return;
     }
-    else if (flag == 1) {
-        res.send("Not implemented");
-    }
+
+    res.send("Not implemented");
 
     function utcDepartureDate(departureDate) {
         let year = departureDate.substring(0, 4);
@@ -56,41 +47,57 @@ app.get('/spiderbot/list', async (req, res) => {
 });
 
 app.post('/spiderbot/monitor', async (req, res) => {
-    let promises = [];
-    let flightNumbers = [];
     let cache = new Map();
+    const results = await monitorResults(req, cache);
 
-    for (let key in req.body) {
-        if (req.body.hasOwnProperty(key)) {
-            let item = req.body[key];
-            
-            let departure = item.departure;
-            let destination = item.destination;
-            let departureDate = new Date(item.departureDate);
-            let departureDateUTC = new Date(Date.UTC(departureDate.getUTCFullYear(), departureDate.getUTCMonth(), 
+    if (isAllCorrect(flightNumbers(req), results)) {
+        res.send(true);
+
+        return;
+    }
+    
+    res.send(false);
+
+    async function monitorResults(req, cache) {
+        let promises = [];
+
+        for (let key in req.body) {
+            if (req.body.hasOwnProperty(key)) {
+                let item = req.body[key];
+                
+                let parameter = [[item.departure, item.destination], 0];
+                let promise = runThread(parameter, utcDepartureDate(new Date(item.departureDate)), 0, cache);
+                promises.push(promise);
+            }
+        }
+
+        return await Promise.all(promises);
+    }
+
+    function utcDepartureDate(departureDate) {
+        let utcDepartureDate = new Date(Date.UTC(departureDate.getUTCFullYear(), departureDate.getUTCMonth(), 
                                             departureDate.getUTCDate(), departureDate.getUTCHours(),
                                             departureDate.getUTCMinutes(), departureDate.getUTCSeconds()) 
                                         );
-            let flightNumber = item.flightNumber;
-            flightNumbers.push(flightNumber);
-            
-            let present = [[departure, destination], 0];
-            let promise = runThread(present, departureDateUTC, 0, cache);
-            promises.push(promise);
+        return utcDepartureDate;
+    }
+    
+    function flightNumbers(req) {
+        let results = [];
+
+        for (let key in req.body) {
+            if (req.body.hasOwnProperty(key)) {
+                let item = req.body[key];
+
+                results.push(item.flightNumber);
+            }
         }
-    }
 
-    let results = await Promise.all(promises);
-
-    let match = isAllCorrect(flightNumbers, results);
-
-    if (match) {
-        res.send(true);
-    }
-    else {
-        res.send(false);
+        return results;
     }
 })
+
+app.listen(port);
 
 function isAllCorrect(flightNumbers, results) {
     let resultLength = results.length;
@@ -127,8 +134,6 @@ function runThread(present, departureDate, flag, cache) {
         resolve(resultPerPath);
     })
 }
-
-app.listen(port);
 
 function printFinded(finded) {
     for (let temp of finded) {
