@@ -23,10 +23,7 @@ app.get('/spiderbot/list', async (req, res) => {
     let {departure, destination, departureDate, flag} = req.query;
 
     if (flag == 0) {
-        let fastestRoute = findFastestRoute(departure, destination);
-
-        let task = makeTask(departure, destination, utcDepartureDate(departureDate), fastestRoute);
-        let result = await process(task);
+        const result = await crawlingJob();
 
         res.send(JSON.stringify(result));
         
@@ -43,6 +40,15 @@ app.get('/spiderbot/list', async (req, res) => {
         return new Date(Date.UTC(
             Number(year), Number(month) - 1, Number(day) 
         ));
+    }
+
+    async function crawlingJob() {
+        let fastestRoute = findFastestRoute(departure, destination);
+
+        let task = makeTask(departure, destination, utcDepartureDate(departureDate), fastestRoute);
+        let result = await process(task);
+
+        return result;
     }
 });
 
