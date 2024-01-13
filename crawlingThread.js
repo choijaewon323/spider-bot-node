@@ -5,10 +5,7 @@ const Route = require("./classes/Route.js");
 module.exports = {crawl};
 
 async function crawl(value) {
-    const browser = await puppeteer.launch({
-        timeout: 0,
-        headless: false
-    });
+    const browser = await makeBrowser();
 
     const page = await browser.newPage();
 
@@ -122,6 +119,13 @@ async function crawl(value) {
     await browser.close();
 
     return result;
+
+    async function makeBrowser() {
+        return await puppeteer.launch({
+            timeout: 0,
+            headless: false
+        });
+    }
 }
 
 function delay(time) {

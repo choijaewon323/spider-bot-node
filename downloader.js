@@ -10,25 +10,35 @@ module.exports = async function process(task) {
     let departureDate = task.departureDate;
     let paths = task.paths;
 
-    let direct = [[departure, destination], 0];
-    let directResult = await runThread(direct, departureDate, 0);
+    const directResults = await directFlights();
 
-    if (directResult.length != 0) {
-        return directResult;
+    if (directResults.length != 0) {
+        return directResults;
     }
 
-    let cache = new Map();
+    return await stopoverFlights();
 
-    for (let present of paths) {
-        let path = present[0];
-        let result = await runThread(present, departureDate, 1, cache);
+    async function directFlights() {
+        let direct = [[departure, destination], 0];
+        let result = await runThread(direct, departureDate, 0);
 
-        if (result.length != 0) {
-            return result;
+        return result;
+    }
+
+    async function stopoverFlights() {
+        let cache = new Map();
+
+        for (let present of paths) {
+            let path = present[0];
+            let result = await runThread(present, departureDate, 1, cache);
+
+            if (result.length != 0) {
+                return result;
+            }
         }
-    }
 
-    return [];
+        return [];
+    }
 }
 
 function runThread(present, departureDate, flag, cache) {
